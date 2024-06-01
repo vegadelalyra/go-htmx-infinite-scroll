@@ -1,0 +1,75 @@
+{{ block "index" . }}
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://unpkg.com/htmx.org/dist/htmx.min.js"></script>
+  <title>htmxgo!</title>
+  <link rel="stylesheet" href="/css/index.css">
+</head>
+
+<body>
+  {{ template "form" .Form }}
+  <hr />
+  {{ template "display" .Data }}
+  <script>
+    document.addEventListener('DOMContentLoaded', event => {
+      document.body.addEventListener('htmx:beforeSwap', function (evt) {
+        if (evt.detail.xhr.status === 422) {
+          evt.detail.shouldSwap = true;
+          evt.detail.isEError = false;
+        }
+      });
+    });
+  </script>
+</body>
+
+</html>
+{{ end }} {{ block "form" . }}
+<form hx-swap="outerHTML" hx-post="/contacts">
+  name:
+  <input {{ if .Values.name }} value="{{ .Values.name }}" {{ end }} type="text" name="name" />
+  email:
+  <input {{ if .Values.email }} value="{{ .Values.email }}" {{ end }} type="email" name="email" />
+
+  {{ if .Errors.email }}
+  <div style="color: red">{{ .Errors.email }}</div>
+  {{ end }}
+  <button type="submit">Create Contact</button>
+</form>
+{{ end }} {{ block "display" . }}
+<div id="contacts" style="display: flex; flex-direction: column">
+  {{ range .Contacts }} {{ template "contact" . }} {{ end }}
+</div>
+{{ end }} 
+
+{{ block "contact" . }}
+<div class="contact" id="contact-{{ .Id }}" style="display: flex; margin-top: 10px;">
+  <div 
+  hx-indicator="#ci-{{ .Id }}" 
+  hx-target="#contact-{{ .Id }}" 
+  hx-swap="outerHTML swap:500ms" 
+  hx-delete="/contacts/{{ .Id }}"
+    style="width: 1rem; cursor: pointer; margin-right: 10px;">
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512" width="16" height="16">
+      <path
+        d="M135.2 0H312.8C318.6 0 323.9 4.03 325.7 9.67L338.5 64H384C392.8 64 400 71.16 400 80C400 88.84 392.8 96 384 96H64C55.16 96 48 88.84 48 80C48 71.16 55.16 64 64 64H109.5L122.3 9.67C124.1 4.03 129.4 0 135.2 0zM438.6 98.74C444.4 100.1 448 105.3 448 111.1C448 117.9 444.4 123.1 438.6 125.3L409.5 134.7L375.4 445.3C372.2 472.3 349.4 493.1 322.2 493.1H125.8C98.63 493.1 75.77 472.3 72.59 445.3L38.45 134.7L9.375 125.3C3.593 123.1 0 117.9 0 111.1C0 105.3 3.593 100.1 9.375 98.74L438.6 98.74zM111.1 446.8C112.6 456.8 120.8 464 130.8 464H317.2C327.2 464 335.4 456.8 336.9 446.8L369.8 144H78.25L111.1 446.8zM143.1 416C143.1 407.2 151.2 400 160 400C168.8 400 176 407.2 176 416V304C176 295.2 168.8 288 160 288C151.2 288 144 295.2 144 304V416zM240 400C248.8 400 256 407.2 256 416V304C256 295.2 248.8 288 240 288C231.2 288 224 295.2 224 304V416C224 407.2 231.2 400 240 400zM304 416C304 407.2 311.2 400 320 400C328.8 400 336 407.2 336 416V304C336 295.2 328.8 288 320 288C311.2 288 304 295.2 304 304V416z" />
+    </svg>
+  </div>
+
+  Name: <span>{{ .Name }}</span> 
+  Email: <span>{{ .Email }}</span>
+
+  <div id="ci-{{ .Id }}" class="htmx-indicator">
+    <img src="/images/bars.svg" alt="loading" style="width: 1rem">
+  </div>
+</div>
+{{ end }} {{ block "oob-contact" . }}
+<div id="contacts" hx-swap-oob="afterbegin">
+  {{ template "contact" . }}
+</div>
+{{ end }} {{ block "test" . }}
+<div>__TESTING__</div>
+{{ end }}
